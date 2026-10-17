@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Morandi Tour — Admin Login</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #d4a840; --gold-light: #e8c97a; --gold-dark: #96701e;
+      --dark: #1a1208; --dark-2: #2a1e0e;
+      --sand: #fdf6e3; --white: #ffffff;
+      --error: #c62828;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: var(--dark);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .bg-pattern {
+      position: absolute; inset: 0;
+      background: 
+        radial-gradient(ellipse at 20% 50%, rgba(212,168,64,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(212,168,64,0.05) 0%, transparent 50%),
+        linear-gradient(135deg, #1a1208 0%, #2a1e0e 50%, #1a1208 100%);
+    }
+    .bg-grid {
+      position: absolute; inset: 0; opacity: 0.03;
+      background-image: linear-gradient(var(--gold) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--gold) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .login-card {
+      position: relative; z-index: 2;
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(212,168,64,0.2);
+      border-radius: 24px;
+      padding: 48px 44px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+    .login-logo {
+      text-align: center; margin-bottom: 36px;
+    }
+    .logo-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(212,168,64,0.3);
+    }
+    .logo-name { font-family: 'Playfair Display', serif; font-size: 26px; color: white; }
+    .logo-sub { font-size: 12px; letter-spacing: 2px; color: var(--gold-light); text-transform: uppercase; margin-top: 4px; }
+    .admin-badge {
+      display: inline-block; margin-top: 10px;
+      padding: 4px 14px; border-radius: 20px;
+      background: rgba(212,168,64,0.15); border: 1px solid rgba(212,168,64,0.3);
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--gold-light);
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%; padding: 14px 18px;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: white; font-size: 15px; font-family: 'Inter', sans-serif;
+      outline: none; transition: all 0.3s ease;
+    }
+    .form-input::placeholder { color: rgba(255,255,255,0.3); }
+    .form-input:focus { border-color: var(--gold); background: rgba(255,255,255,0.08); box-shadow: 0 0 0 3px rgba(212,168,64,0.15); }
+    .input-wrap { position: relative; }
+    .toggle-pw {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      cursor: pointer; font-size: 18px; user-select: none; color: rgba(255,255,255,0.4);
+      transition: color 0.2s;
+    }
+    .toggle-pw:hover { color: var(--gold); }
+    .login-btn {
+      width: 100%; padding: 15px; border: none; border-radius: 10px;
+      background: linear-gradient(135deg, var(--gold), #b8892a);
+      color: white; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: all 0.3s ease; margin-top: 8px;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 8px 24px rgba(212,168,64,0.3);
+    }
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(212,168,64,0.4); }
+    .login-btn:active { transform: translateY(0); }
+    .error-msg {
+      display: none; margin-top: 14px;
+      padding: 12px 16px; border-radius: 8px;
+      background: rgba(198,40,40,0.15); border: 1px solid rgba(198,40,40,0.3);
+      color: #ef9a9a; font-size: 13px; text-align: center;
+    }
+    .error-msg.show { display: block; animation: shake 0.4s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+    .hint {
+      margin-top: 24px; padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+    }
+    .hint a { font-size: 13px; color: rgba(255,255,255,0.4); transition: color 0.2s; }
+    .hint a:hover { color: var(--gold-light); }
+    .security-info {
+      margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 11px; color: rgba(255,255,255,0.25);
+    }
+    .loader { display: none; }
+    .login-btn.loading .loader { display: inline-block; }
+    .login-btn.loading .btn-text { display: none; }
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <div class="bg-grid"></div>
+
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">🌿</div>
+      <div class="logo-name">Morandi Tour</div>
+      <div class="logo-sub">Incoming Italy</div>
+      <div class="admin-badge">🔐 Area Amministrativa</div>
+    </div>
+
+    <form id="login-form" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input class="form-input" type="text" id="username" placeholder="admin" autocomplete="username" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+          <span class="toggle-pw" onclick="togglePw()" id="pw-eye">👁️</span>
+        </div>
+      </div>
+      <button type="submit" class="login-btn" id="login-btn">
+        <span class="btn-text">🔓 Accedi al Pannello</span>
+        <span class="loader"><span class="spinner"></span></span>
+      </button>
+      <div class="error-msg" id="error-msg">
+        ⚠️ Credenziali non corrette. Riprova.
+      </div>
+    </form>
+
+    <div class="hint">
+      <a href="index.html">← Torna al sito pubblico</a>
+    </div>
+    <div class="security-info">🔒 Connessione protetta · Solo accesso autorizzato</div>
+  </div>
+
+  <script>
+    // Default credentials — saved in localStorage, changeable from admin settings
+    function getCredentials() {
+      return {
+        username: localStorage.getItem('mt_admin_user') || 'admin',
+        password: localStorage.getItem('mt_admin_pass') || 'morandi2024'
+      };
+    }
+
+    // Check if already logged in
+    if (sessionStorage.getItem('mt_logged') === 'true') {
+      window.location.href = 'admin-panel.html';
+    }
+
+    function doLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      btn.classList.add('loading');
+
+      setTimeout(() => {
+        const creds = getCredentials();
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value;
+
+        if (u === creds.username && p === creds.password) {
+          sessionStorage.setItem('mt_logged', 'true');
+          sessionStorage.setItem('mt_login_time', Date.now());
+          window.location.href = 'admin-panel.html';
+        } else {
+          btn.classList.remove('loading');
+          const err = document.getElementById('error-msg');
+          err.classList.remove('show');
+          void err.offsetWidth; // reflow
+          err.classList.add('show');
+        }
+      }, 900);
+    }
+
+    function togglePw() {
+      const inp = document.getElementById('password');
+      const eye = document.getElementById('pw-eye');
+      if (inp.type === 'password') {
+        inp.type = 'text'; eye.textContent = '🙈';
+      } else {
+        inp.type = 'password'; eye.textContent = '👁️';
+      }
+    }
+  </script>
+</body>
+</html>

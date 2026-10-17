@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Morandi Tour — Admin Panel</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --gold: #d4a840; --gold-light: #e8c97a; --gold-dark: #96701e;
+      --gold-bg: #fdf6e3; --gold-bg2: #f5e6b0;
+      --dark: #1a1208; --dark-2: #2a1e0e; --dark-3: #3d2e18;
+      --sidebar-w: 260px;
+      --white: #ffffff;
+      --bg: #f4f0eb;
+      --card: #ffffff;
+      --border: #e8d5c0;
+      --text: #1a1208; --text-2: #5a3a20; --text-3: #9c7d5c;
+      --green: #2e7d32; --green-bg: #e8f5e9;
+      --red: #c62828; --red-bg: #ffebee;
+      --blue: #1565c0; --blue-bg: #e3f2fd;
+      --orange: #e65100; --orange-bg: #fff3e0;
+      --shadow: 0 2px 12px rgba(26,18,8,0.08);
+      --shadow-md: 0 8px 32px rgba(26,18,8,0.12);
+      --radius: 12px; --radius-lg: 20px;
+      --font: 'Inter', sans-serif;
+      --font-display: 'Playfair Display', serif;
+      --transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ============================================================
+       RESET
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100%; display: flex; }
+    img { display: block; max-width: 100%; }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    button { font-family: var(--font); cursor: pointer; }
+    input, select, textarea { font-family: var(--font); }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    #sidebar {
+      width: var(--sidebar-w); min-height: 100vh; flex-shrink: 0;
+      background: var(--dark);
+      display: flex; flex-direction: column;
+      position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+      transition: var(--transition);
+    }
+    .sidebar-logo {
+      padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .sidebar-logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .sidebar-logo-text strong { display: block; font-family: var(--font-display); font-size: 16px; color: white; }
+    .sidebar-logo-text span { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-light); }
+    .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+    .nav-section-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,0.25); padding: 16px 8px 8px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 12px; border-radius: 10px;
+      color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: var(--transition); margin-bottom: 2px;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+    .nav-item.active { background: rgba(212,168,64,0.15); color: var(--gold-light); }
+    .nav-item .nav-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+    .nav-item .nav-badge {
+      margin-left: auto; background: var(--gold); color: var(--dark);
+      padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;
+    }
+    .nav-item .nav-badge.red { background: #ef5350; color: white; }
+    .sidebar-footer {
+      padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: 10px; background: rgba(255,255,255,0.04);
+    }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .user-info strong { display: block; font-size: 13px; color: white; }
+    .user-info span { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .logout-btn {
+      margin-left: auto; background: transparent; border: none;
+      color: rgba(255,255,255,0.3); font-size: 18px; cursor: pointer; transition: color 0.2s;
+    }
+    .logout-btn:hover { color: #ef5350; }
+
+    /* ============================================================
+       MAIN CONTENT
+    ============================================================ */
+    #main {
+      margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column;
+      min-height: 100vh;
+    }
+    #topbar {
+      height: 64px; background: var(--white); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 1px 4px rgba(26,18,8,0.05);
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .topbar-subtitle { font-size: 12px; color: var(--text-3); }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .topbar-btn {
+      padding: 8px 18px; border-radius: 8px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .topbar-btn.primary { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: white; }
+    .topbar-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,168,64,0.3); }
+    .topbar-btn.secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text-2); }
+    .topbar-btn.secondary:hover { background: var(--gold-bg); }
+    .notif-btn {
+      position: relative; width: 38px; height: 38px; border-radius: 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+      cursor: pointer;
+    }
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ef5350; border: 2px solid white;
+    }
+    #page-content { padding: 28px; flex: 1; }
+
+    /* ============================================================
+       CARDS & STATS
+    ============================================================ */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border-radius: var(--radius); padding: 22px;
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+      display: flex; align-items: flex-start; gap: 16px;
+      transition: var(--transition);
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .stat-icon.gold { background: var(--gold-bg); }
+    .stat-icon.green { background: var(--green-bg); }
+    .stat-icon.blue { background: var(--blue-bg); }
+    .stat-icon.orange { background: var(--orange-bg); }
+    .stat-info { flex: 1; }
+    .stat-value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-label { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+    .stat-trend {
+      font-size: 12px; font-weight: 600; margin-top: 8px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .stat-trend.up { color: var(--green); }
+    .stat-trend.down { color: var(--red); }
+
+    /* ============================================================
+       CONTENT GRID
+    ============================================================ */
+    .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    .content-grid.full { grid-template-columns: 1fr; }
+
+    /* ============================================================
+       PANEL / CARD
+    ============================================================ */
+    .panel {
+      background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .panel-header {
+      padding: 18px 22px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .panel-subtitle { font-size: 12px; color: var(--text-3); }
+    .panel-body { padding: 22px; }
+    .panel-action {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; font-size: 13px; color: var(--text-2); cursor: pointer; transition: var(--transition);
+    }
+    .panel-action:hover { background: var(--gold-bg); border-color: var(--gold); color: var(--gold-dark); }
+
+    /* ============================================================
+       TABLE
+    ============================================================ */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      padding: 12px 16px; text-align: left;
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-3); background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    .data-table td {
+      padding: 14px 16px; border-bottom: 1px solid #f0e8dc;
+      font-size: 14px; color: var(--text);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: #faf6f0; }
+    .data-table .actions { display: flex; gap: 6px; }
+    .tbl-btn {
+      padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: transparent; font-size: 12px; cursor: pointer; transition: var(--transition);
+    }
+    .tbl-btn:hover { background: var(--bg); }
+    .tbl-btn.edit:hover { border-color: var(--gold); color: var(--gold-dark); background: var(--gold-bg); }
+    .tbl-btn.delete:hover { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+    .tbl-btn.view:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+    .tour-thumb { width: 50px; height: 38px; border-radius: 6px; object-fit: cover; }
+    .tour-thumb-ph {
+      width: 50px; height: 38px; border-radius: 6px;
+      background: var(--gold-bg); display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+
+    /* ============================================================
+       BADGES / STATUS
+    ============================================================ */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .badge.green { background: var(--green-bg); color: var(--green); }
+    .badge.red { background: var(--red-bg); color: var(--red); }
+    .badge.gold { background: var(--gold-bg); color: var(--gold-dark); }
+    .badge.blue { background: var(--blue-bg); color: var(--blue); }
+    .badge.orange { background: var(--orange-bg); color: var(--orange); }
+    .badge.gray { background: #f5f5f5; color: #616161; }
+
+    /* ============================================================
+       FORM ELEMENTS
+    ============================================================ */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: span 2; }
+    .form-group.full-3 { grid-column: span 3; }
+    .form-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); }
+    .form-control {
+      padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: var(--white); font-size: 14px; color: var(--text);
+      outline: none; transition: var(--transition); appearance: none;
+    }
+    .form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,64,0.12); }
+    textarea.form-control { resize: vertical; min-height: 90px; }
+    .form-hint { font-size: 11px; color: var(--text-3); }
+    .form-row { display: flex; gap: 12px; align-items: flex-end; }
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 22px; border-radius: 8px; border: none;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: white; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,168,64,0.3); }
+    .btn-secondary { background: var(--bg); border: 1.5px solid var(--border); color: var(--text-2); }
+    .btn-secondary:hover { background: var(--gold-bg); border-color: var(--gold); }
+    .btn-danger { background: var(--red-bg); border: 1.5px solid rgba(198,40,40,0.2); color: var(--red); }
+    .btn-danger:hover { background: #ffcdd2; }
+    .btn-sm { padding: 7px 14px; font-size: 13px; }
+    .btn-icon { padding: 8px; border-radius: 8px; }
+
+    /* ============================================================
+       MODAL
+    ============================================================ */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(26,18,8,0.6); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: var(--transition);
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--white); border-radius: var(--radius-lg);
+      max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto;
+      transform: scale(0.95); transition: var(--transition);
+      box-shadow: 0 40px 80px rgba(26,18,8,0.25);
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; font-size: 16px; cursor: pointer; transition: var(--transition);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--red-bg); border-color: rgba(198,40,40,0.2); color: var(--red); }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+
+    /* ============================================================
+       UPLOAD AREA
+    ============================================================ */
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 32px; text-align: center; cursor: pointer; transition: var(--transition);
+      background: var(--bg);
+    }
+    .upload-area:hover, .upload-area.drag-over { border-color: var(--gold); background: var(--gold-bg); }
+    .upload-area .upload-icon { font-size: 36px; margin-bottom: 10px; }
+    .upload-area p { font-size: 14px; color: var(--text-2); }
+    .upload-area span { font-size: 12px; color: var(--text-3); }
+    .upload-preview {
+      margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;
+    }
+    .preview-img-wrap {
+      position: relative; width: 80px; height: 60px; border-radius: 8px; overflow: hidden;
+    }
+    .preview-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-rm {
+      position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(0,0,0,0.6); border: none; color: white; font-size: 12px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ============================================================
+       DASHBOARD CHART (CSS only sparklines)
+    ============================================================ */
+    .chart-bar-wrap { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+    .chart-bar {
+      flex: 1; border-radius: 4px 4px 0 0;
+      background: linear-gradient(0deg, var(--gold-dark), var(--gold-light));
+      opacity: 0.7; transition: opacity 0.2s;
+      position: relative; cursor: pointer;
+    }
+    .chart-bar:hover { opacity: 1; }
+    .chart-bar::after {
+      content: attr(data-val);
+      position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%);
+      background: var(--dark); color: white; font-size: 11px; padding: 2px 6px; border-radius: 4px;
+      white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .chart-bar:hover::after { opacity: 1; }
+    .chart-labels { display: flex; gap: 6px; margin-top: 6px; }
+    .chart-label { flex: 1; text-align: center; font-size: 11px; color: var(--text-3); }
+
+    /* ============================================================
+       ACTIVITY FEED
+    ============================================================ */
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid #f0e8dc;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .activity-dot.booking { background: var(--green-bg); }
+    .activity-dot.tour { background: var(--gold-bg); }
+    .activity-dot.review { background: var(--blue-bg); }
+    .activity-dot.alert { background: var(--red-bg); }
+    .activity-text strong { display: block; font-size: 13px; color: var(--text); }
+    .activity-text span { font-size: 12px; color: var(--text-3); }
+
+    /* ============================================================
+       TOGGLE SWITCH
+    ============================================================ */
+    .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+    .toggle {
+      position: relative; width: 44px; height: 24px;
+      background: #ccc; border-radius: 12px; cursor: pointer; transition: background 0.3s;
+    }
+    .toggle.on { background: var(--gold); }
+    .toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%; background: white;
+      transition: left 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .toggle.on::after { left: 23px; }
+    .toggle-label { font-size: 14px; color: var(--text-2); }
+
+    /* ============================================================
+       STAR RATING
+    ============================================================ */
+    .star-input { display: flex; gap: 4px; }
+    .star-input span { font-size: 24px; cursor: pointer; color: #ccc; transition: color 0.1s; }
+    .star-input span.active { color: var(--gold); }
+
+    /* ============================================================
+       PAGE SECTIONS (hidden/shown)
+    ============================================================ */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.mobile-open { transform: translateX(0); }
+      #main { margin-left: 0; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .content-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full, .form-group.full-3 { grid-column: span 1; }
+    }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    /* ============================================================
+       UTILS
+    ============================================================ */
+    .flex { display: flex; } .items-center { align-items: center; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; }
+    .ml-auto { margin-left: auto; } .mt-1 { margin-top: 4px; } .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 16px; } .mt-4 { margin-top: 24px; }
+    .mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 16px; } .mb-4 { margin-bottom: 24px; }
+    .text-sm { font-size: 13px; } .text-xs { font-size: 11px; } .text-muted { color: var(--text-3); }
+    .font-bold { font-weight: 700; } .text-center { text-align: center; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state p { font-size: 15px; color: var(--text-3); }
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--border);
+      background: var(--bg); font-size: 14px;
+    }
+    .search-box input { border: none; background: transparent; outline: none; flex: 1; font-size: 14px; color: var(--text); }
+    .color-swatch { width: 28px; height: 28px; border-radius: 6px; border: 2px solid var(--border); cursor: pointer; }
+    .settings-section { margin-bottom: 32px; }
+    .settings-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text); padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+      padding: 14px 22px; border-radius: 10px;
+      background: var(--dark); color: white; font-size: 14px;
+      border-left: 4px solid var(--gold);
+      box-shadow: var(--shadow-md);
+      transform: translateX(200px); opacity: 0; transition: var(--transition);
+    }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .progress-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .section-heading { font-size: 20px; font-weight: 700; color: var(--text); }
+    .section-desc { font-size: 13px; color: var(--text-3); margin-top: 2px; }
+    .filters-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-chip {
+      padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: transparent; font-size: 13px; cursor: pointer; transition: var(--transition); color: var(--text-2);
+    }
+    .filter-chip:hover, .filter-chip.active { border-color: var(--gold); background: var(--gold-bg); color: var(--gold-dark); }
+    .mobile-menu-btn {
+      display: none; width: 38px; height: 38px; border-radius: 8px;
+      border: 1px solid var(--border); background: transparent; cursor: pointer; font-size: 20px;
+      align-items: center; justify-content: center;
+    }
+    @media (max-width: 900px) { .mobile-menu-btn { display: flex; } }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       SIDEBAR
+  ============================================================ -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🌿</div>
+      <div class="sidebar-logo-text">
+        <strong>Morandi Tour</strong>
+        <span>Admin Panel</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Principale</div>
+      <div class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+
+      <div class="nav-section-title">Contenuti</div>
+      <div class="nav-item" onclick="showSection('tours')" id="nav-tours">
+        <span class="nav-icon">🗺️</span> Tour & Esperienze
+        <span class="nav-badge" id="tours-count-badge">0</span>
+      </div>
+      <div class="nav-item" onclick="showSection('destinations')" id="nav-destinations">
+        <span class="nav-icon">📍</span> Destinazioni
+      </div>
+      <div class="nav-item" onclick="showSection('reviews')" id="nav-reviews">
+        <span class="nav-icon">⭐</span> Recensioni
+        <span class="nav-badge" id="reviews-count-badge">0</span>
+      </div>
+
+      <div class="nav-section-title">Prenotazioni</div>
+      <div class="nav-item" onclick="showSection('bookings')" id="nav-bookings">
+        <span class="nav-icon">📅</span> Prenotazioni
+        <span class="nav-badge red" id="bookings-count-badge">0</span>
+      </div>
+
+      <div class="nav-section-title">Configurazione</div>
+      <div class="nav-item" onclick="showSection('settings')" id="nav-settings">
+        <span class="nav-icon">⚙️</span> Impostazioni
+      </div>
+      <div class="nav-item" onclick="window.open('index.html','_blank')" id="nav-site">
+        <span class="nav-icon">🌐</span> Vedi Sito
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">👤</div>
+        <div class="user-info">
+          <strong id="sidebar-username">Admin</strong>
+          <span>Amministratore</span>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN
+  ============================================================ -->
+  <div id="main">
+    <!-- TOPBAR -->
+    <div id="topbar">
+      <div>
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span class="topbar-title" id="topbar-title">Dashboard</span>
+        <div class="topbar-subtitle" id="topbar-subtitle">Benvenuto nel pannello di controllo</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="notif-btn" id="notif-btn" title="Notifiche">
+          🔔<span class="notif-dot" id="notif-dot"></span>
+        </div>
+        <button class="topbar-btn primary" id="topbar-cta" onclick="topbarAction()">
+          ➕ Aggiungi Tour
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div id="page-content">
+
+      <!-- ==================== DASHBOARD ==================== -->
+      <div class="page-section active" id="section-dashboard">
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon gold">💰</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-revenue">€0</div>
+              <div class="stat-label">Fatturato Totale</div>
+              <div class="stat-trend up">↑ +12% vs mese scorso</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">📅</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-bookings">0</div>
+              <div class="stat-label">Prenotazioni Totali</div>
+              <div class="stat-trend up">↑ +8% questo mese</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue">🗺️</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-tours">0</div>
+              <div class="stat-label">Tour Attivi</div>
+              <div class="stat-trend up">↑ +3 nuovi</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">⭐</div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-rating">4.9</div>
+              <div class="stat-label">Rating Medio</div>
+              <div class="stat-trend up">↑ +0.1 questo mese</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts + Activity -->
+        <div class="content-grid mb-4">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">📈 Prenotazioni ultimi 7 giorni</div>
+                <div class="panel-subtitle">Andamento settimanale</div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="chart-bar-wrap" id="bookings-chart"></div>
+              <div class="chart-labels" id="chart-labels"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🔔 Attività Recente</div>
+            </div>
+            <div class="panel-body" style="padding:0;">
+              <div id="activity-feed" style="padding:0 22px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent bookings -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">📋 Ultime Prenotazioni</div>
+              <div class="panel-subtitle">Le più recenti in attesa di conferma</div>
+            </div>
+            <button class="panel-action" onclick="showSection('bookings')">Vedi tutte →</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="dash-bookings-table">
+              <thead>
+                <tr>
+                  <th>#ID</th><th>Cliente</th><th>Tour</th><th>Data</th><th>Ospiti</th><th>Totale</th><th>Stato</th><th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="dash-bookings-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top tours -->
+        <div class="content-grid mt-4">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🏆 Tour Più Prenotati</div>
+            </div>
+            <div class="panel-body" id="top-tours-list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">🌍 Provenienza Clienti</div>
+            </div>
+            <div class="panel-body" id="origin-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TOURS ==================== -->
+      <div class="page-section" id="section-tours">
+        <div class="section-header">
+          <div>
+            <div class="section-heading">🗺️ Tour & Esperienze</div>
+            <div class="section-desc">Gestisci tutti i tour pubblicati sul sito</div>
+          </div>
+          <div class="flex gap-2">
+            <div class="search-box">
+              <span>🔍</span>
+              <input type="text" id="tours-search" placeholder="Cerca tour…" oninput="renderToursTable()" />
+            </div>
+            <button class="btn btn-primary" onclick="openTourModal()">➕ Nuovo Tour</button>
+          </div>
+        </div>
+        <div class="filters-row">
+          <button class="filter-chip active" onclick="filterTours(this,'tutti')">Tutti</button>
+          <button class="filter-chip" onclick="filterTours(this,'cultura')">🏛️ Cultura</button>
+          <button class="filter-chip" onclick="filterTours(this,'food')">🍷 Food & Wine</button>
+          <button class="filter-chip" onclick="filterTours(this,'natura')">🏔️ Natura</button>
+          <button class="filter-chip" onclick="filterTours(this,'privato')">🔑 Privati</button>
+          <button class="filter-chip" onclick="filterTours(this,'arte')">🎨 Arte</button>
+        </div>
+        <div class="panel">
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="tours-table">
+              <thead>
+                <tr>
+                  <th>Immagine</th><th>Nome Tour</th><th>Destinazione</th><th>Categoria</th>
+                  <th>Durata</th><th>Prezzo</th><th>Pax Max</th><th>Stato</th><th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="tours-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== BOOKINGS ==================== -->
+      <div class="page-section" id="section-bookings">
+        <div class="section-header">
+          <div>
+            <div class="section-heading">📅 Prenotazioni</div>
+            <div class="section-desc">Gestisci le prenotazioni ricevute</div>
+          </div>
+          <div class="flex gap-2">
+            <div class="search-box">
+              <span>🔍</span>
+              <input type="text" id="bookings-search" placeholder="Cerca per cliente o tour…" oninput="renderBookingsTable()" />
+            </div>
+            <button class="btn btn-primary" onclick="openBookingModal()">➕ Nuova Prenotazione</button>
+          </div>
+        </div>
+        <div class="filters-row">
+          <button class="filter-chip active" onclick="filterBookings(this,'tutti')">Tutti</button>
+          <button class="filter-chip" onclick="filterBookings(this,'pending')">⏳ In Attesa</button>
+          <button class="filter-chip" onclick="filterBookings(this,'confirmed')">✅ Confermati</button>
+          <button class="filter-chip" onclick="filterBookings(this,'cancelled')">❌ Annullati</button>
+        </div>
+        <div class="panel">
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#ID</th><th>Cliente</th><th>Email</th><th>Tour</th><th>Data Tour</th>
+                  <th>Pax</th><th>Totale</th><th>Stato</th><th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody id="bookings-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== DESTINATIONS ==================== -->
+      <div class="page-section" id="section-destinations">
+        <div class="section-header">
+          <div>
+            <div class="section-heading">📍 Destinazioni</div>
+            <div class="section-desc">Le destinazioni mostrate sul sito pubblico</div>
+          </div>
+          <button class="btn btn-primary" onclick="openDestModal()">➕ Nuova Destinazione</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;" id="destinations-grid"></div>
+      </div>
+
+      <!-- ==================== REVIEWS ==================== -->
+      <div class="page-section" id="section-reviews">
+        <div class="section-header">
+          <div>
+            <div class="section-heading">⭐ Recensioni</div>
+            <div class="section-desc">Gestisci le recensioni pubblicate sul sito</div>
+          </div>
+          <button class="btn btn-primary" onclick="openReviewModal()">➕ Nuova Recensione</button>
+        </div>
+        <div class="filters-row">
+          <button class="filter-chip active" onclick="filterReviews(this,'tutti')">Tutti</button>
+          <button class="filter-chip" onclick="filterReviews(this,'published')">✅ Pubblicate</button>
+          <button class="filter-chip" onclick="filterReviews(this,'pending')">⏳ In Moderazione</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;" id="reviews-grid"></div>
+      </div>
+
+      <!-- ==================== SETTINGS ==================== -->
+      <div class="page-section" id="section-settings">
+        <div class="section-header">
+          <div>
+            <div class="section-heading">⚙️ Impostazioni</div>
+            <div class="section-desc">Configura il tuo sito web</div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">💾 Salva Impostazioni</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
+          <div>
+            <!-- General Settings -->
+            <div class="panel mb-4">
+              <div class="panel-header"><div class="panel-title">🏢 Informazioni Azienda</div></div>
+              <div class="panel-body">
+                <div class="settings-section">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label class="form-label">Nome Azienda</label>
+                      <input type="text" class="form-control" id="s-company" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Slogan</label>
+                      <input type="text" class="form-control" id="s-slogan" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Email Contatto</label>
+                      <input type="email" class="form-control" id="s-email" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Telefono / WhatsApp</label>
+                      <input type="text" class="form-control" id="s-phone" />
+                    </div>
+                    <div class="form-group full">
+                      <label class="form-label">Indirizzo</label>
+                      <input type="text" class="form-control" id="s-address" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">P.IVA</label>
+                      <input type="text" class="form-control" id="s-piva" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Lingua Default</label>
+                      <select class="form-control" id="s-lang">
+                        <option value="it">🇮🇹 Italiano</option>
+                        <option value="en">🇬🇧 English</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bokun / OTA Integration -->
+            <div class="panel mb-4">
+              <div class="panel-header"><div class="panel-title">⚡ Integrazione Bokun & OTA</div></div>
+              <div class="panel-body">
+                <div class="form-grid">
+                  <div class="form-group full">
+                    <label class="form-label">Bokun Widget ID</label>
+                    <input type="text" class="form-control" id="s-bokun-id" placeholder="Ex: abc123-def456" />
+                    <div class="form-hint">Trovalo nel tuo account Bokun → Canali → Widget</div>
+                  </div>
+                  <div class="form-group full">
+                    <label class="form-label">Bokun Script URL</label>
+                    <input type="text" class="form-control" id="s-bokun-script" placeholder="https://widgets.bokun.io/…" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">GetYourGuide Supplier ID</label>
+                    <input type="text" class="form-control" id="s-gyg-id" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Viator Product Code</label>
+                    <input type="text" class="form-control" id="s-viator" />
+                  </div>
+                  <div class="form-group full">
+                    <label class="form-label">Stripe Publishable Key</label>
+                    <input type="text" class="form-control" id="s-stripe" placeholder="pk_live_…" />
+                  </div>
+                </div>
+                <div class="mt-3">
+                  <div class="toggle-wrap mb-2">
+                    <div class="toggle on" id="toggle-bokun" onclick="toggleSwitch(this)"></div>
+                    <span class="toggle-label">Abilita prenotazioni Bokun</span>
+                  </div>
+                  <div class="toggle-wrap mb-2">
+                    <div class="toggle on" id="toggle-booking-form" onclick="toggleSwitch(this)"></div>
+                    <span class="toggle-label">Abilita form prenotazione interno</span>
+                  </div>
+                  <div class="toggle-wrap">
+                    <div class="toggle" id="toggle-maintenance" onclick="toggleSwitch(this)"></div>
+                    <span class="toggle-label">Modalità manutenzione</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Social -->
+            <div class="panel mb-4">
+              <div class="panel-header"><div class="panel-title">📱 Social Media & Link</div></div>
+              <div class="panel-body">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label">📸 Instagram URL</label>
+                    <input type="url" class="form-control" id="s-instagram" placeholder="https://instagram.com/…" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">👤 Facebook URL</label>
+                    <input type="url" class="form-control" id="s-facebook" placeholder="https://facebook.com/…" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">💬 WhatsApp Numero</label>
+                    <input type="text" class="form-control" id="s-whatsapp" placeholder="+39 333 000 0000" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">▶️ YouTube URL</label>
+                    <input type="url" class="form-control" id="s-youtube" />
+                  </div>
+                  <div class="form-group full">
+                    <label class="form-label">🗺️ Google Maps Embed URL</label>
+                    <input type="url" class="form-control" id="s-maps" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <!-- Appearance -->
+            <div class="panel mb-4">
+              <div class="panel-header"><div class="panel-title">🎨 Aspetto</div></div>
+              <div class="panel-body">
+                <div class="form-group mb-3">
+                  <label class="form-label">Colore Primario</label>
+                  <div class="flex gap-2 items-center mt-1">
+                    <input type="color" class="color-swatch" id="s-color-primary" value="#d4a840" />
+                    <input type="text" class="form-control" id="s-color-primary-hex" value="#d4a840" style="flex:1" />
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label class="form-label">Colore Scuro</label>
+                  <div class="flex gap-2 items-center mt-1">
+                    <input type="color" class="color-swatch" id="s-color-dark" value="#1a1208" />
+                    <input type="text" class="form-control" id="s-color-dark-hex" value="#1a1208" style="flex:1" />
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label class="form-label">Emoji / Icona Logo</label>
+                  <input type="text" class="form-control" id="s-logo-emoji" value="🌿" maxlength="4" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Font Heading</label>
+                  <select class="form-control" id="s-font">
+                    <option value="Playfair Display">Playfair Display (default)</option>
+                    <option value="Cormorant Garamond">Cormorant Garamond</option>
+                    <option value="Lora">Lora</option>
+                    <option value="Merriweather">Merriweather</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Security -->
+            <div class="panel mb-4">
+              <div class="panel-header"><div class="panel-title">🔐 Sicurezza Admin</div></div>
+              <div class="panel-body">
+                <div class="form-group mb-3">
+                  <label class="form-label">Username Admin</label>
+                  <input type="text" class="form-control" id="s-admin-user" />
+                </div>
+                <div class="form-group mb-3">
+                  <label class="form-label">Nuova Password</label>
+                  <input type="password" class="form-control" id="s-admin-pass" placeholder="Lascia vuoto per non cambiare" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Conferma Password</label>
+                  <input type="password" class="form-control" id="s-admin-pass2" />
+                </div>
+              </div>
+            </div>
+
+            <!-- SEO -->
+            <div class="panel">
+              <div class="panel-header"><div class="panel-title">🔎 SEO</div></div>
+              <div class="panel-body">
+                <div class="form-group mb-3">
+                  <label class="form-label">Meta Title</label>
+                  <input type="text" class="form-control" id="s-meta-title" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Meta Description</label>
+                  <textarea class="form-control" id="s-meta-desc" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+
+  <!-- ============================================================
+       MODAL — TOUR
+  ============================================================ -->
+  <div class="modal-overlay" id="tour-modal-overlay">
+    <div class="modal" style="max-width:720px;">
+      <div class="modal-header">
+        <div class="modal-title" id="tour-modal-title">➕ Nuovo Tour</div>
+        <button class="modal-close" onclick="closeTourModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label">Nome del Tour *</label>
+            <input type="text" class="form-control" id="t-name" placeholder="Es. Roma Imperiale: Colosseo & Foro Romano" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Destinazione *</label>
+            <input type="text" class="form-control" id="t-dest" placeholder="Es. Roma, Lazio" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Categoria *</label>
+            <select class="form-control" id="t-cat">
+              <option value="cultura">🏛️ Tour Culturali</option>
+              <option value="food">🍷 Food & Wine</option>
+              <option value="natura">🏔️ Natura & Trekking</option>
+              <option value="arte">🎨 Arte & Musei</option>
+              <option value="privato">🔑 Tour Privati</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Durata</label>
+            <input type="text" class="form-control" id="t-duration" placeholder="Es. 3 ore" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prezzo Adulti (€) *</label>
+            <input type="number" class="form-control" id="t-price" min="0" placeholder="49" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Partecipanti</label>
+            <input type="number" class="form-control" id="t-pax" min="1" placeholder="12" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Lingue Disponibili</label>
+            <input type="text" class="form-control" id="t-langs" placeholder="IT, EN, DE" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Descrizione Breve</label>
+            <textarea class="form-control" id="t-desc" rows="3" placeholder="Descrizione che appare nella card del tour…"></textarea>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Cosa è Incluso (uno per riga)</label>
+            <textarea class="form-control" id="t-includes" rows="4" placeholder="✓ Guida certificata bilingue&#10;✓ Biglietti skip-the-line&#10;✗ Trasporto non incluso"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL Immagine</label>
+            <input type="url" class="form-control" id="t-img" placeholder="https://…" />
+            <div class="form-hint">Inserisci un URL diretto all'immagine</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge (es. 🔥 Top Seller)</label>
+            <input type="text" class="form-control" id="t-badge" placeholder="🔥 Top Seller" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">ID Bokun Widget</label>
+            <input type="text" class="form-control" id="t-bokun" placeholder="ID widget specifico per questo tour" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stato</label>
+            <select class="form-control" id="t-status">
+              <option value="active">✅ Pubblicato</option>
+              <option value="draft">📝 Bozza</option>
+              <option value="hidden">🚫 Nascosto</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeTourModal()">Annulla</button>
+        <button class="btn btn-primary" onclick="saveTour()">💾 Salva Tour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL — BOOKING
+  ============================================================ -->
+  <div class="modal-overlay" id="booking-modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="booking-modal-title">➕ Nuova Prenotazione</div>
+        <button class="modal-close" onclick="closeBookingModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nome Cliente *</label>
+            <input type="text" class="form-control" id="b-name" placeholder="Mario Rossi" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" class="form-control" id="b-email" placeholder="email@esempio.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefono</label>
+            <input type="tel" class="form-control" id="b-phone" placeholder="+39 333 000 0000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nazionalità</label>
+            <input type="text" class="form-control" id="b-nationality" placeholder="Es. 🇬🇧 Inglese" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Tour *</label>
+            <select class="form-control" id="b-tour" onchange="calcBookingTotal()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data Tour *</label>
+            <input type="date" class="form-control" id="b-date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ora Inizio</label>
+            <input type="time" class="form-control" id="b-time" value="09:00" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adulti</label>
+            <input type="number" class="form-control" id="b-adults" min="1" value="2" oninput="calcBookingTotal()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bambini (–30%)</label>
+            <input type="number" class="form-control" id="b-children" min="0" value="0" oninput="calcBookingTotal()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Totale (€)</label>
+            <input type="number" class="form-control" id="b-total" placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stato</label>
+            <select class="form-control" id="b-status">
+              <option value="pending">⏳ In Attesa</option>
+              <option value="confirmed">✅ Confermato</option>
+              <option value="cancelled">❌ Annullato</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Note</label>
+            <textarea class="form-control" id="b-notes" rows="2" placeholder="Allergie, richieste speciali…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBookingModal()">Annulla</button>
+        <button class="btn btn-primary" onclick="saveBooking()">💾 Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL — DESTINATION
+  ============================================================ -->
+  <div class="modal-overlay" id="dest-modal-overlay">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-header">
+        <div class="modal-title" id="dest-modal-title">➕ Nuova Destinazione</div>
+        <button class="modal-close" onclick="closeDestModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label">Nome Destinazione *</label>
+            <input type="text" class="form-control" id="d-name" placeholder="Es. Roma" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">URL Immagine *</label>
+            <input type="url" class="form-control" id="d-img" placeholder="https://…" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Numero Tour</label>
+            <input type="number" class="form-control" id="d-count" placeholder="18" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emoji</label>
+            <input type="text" class="form-control" id="d-emoji" placeholder="🏛️" maxlength="4" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDestModal()">Annulla</button>
+        <button class="btn btn-primary" onclick="saveDest()">💾 Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL — REVIEW
+  ============================================================ -->
+  <div class="modal-overlay" id="review-modal-overlay">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-header">
+        <div class="modal-title" id="review-modal-title">➕ Nuova Recensione</div>
+        <button class="modal-close" onclick="closeReviewModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nome Cliente *</label>
+            <input type="text" class="form-control" id="r-name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Provenienza</label>
+            <input type="text" class="form-control" id="r-origin" placeholder="🇬🇧 Londra, UK" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Piattaforma</label>
+            <select class="form-control" id="r-platform">
+              <option value="GetYourGuide">⭐ GetYourGuide</option>
+              <option value="Viator">⭐ Viator</option>
+              <option value="TripAdvisor">⭐ TripAdvisor</option>
+              <option value="Google">⭐ Google</option>
+              <option value="Bokun">⭐ Bokun</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rating</label>
+            <select class="form-control" id="r-rating">
+              <option value="5">⭐⭐⭐⭐⭐ 5</option>
+              <option value="4">⭐⭐⭐⭐ 4</option>
+              <option value="3">⭐⭐⭐ 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emoji Avatar</label>
+            <input type="text" class="form-control" id="r-avatar" value="👤" maxlength="4" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stato</label>
+            <select class="form-control" id="r-status">
+              <option value="published">✅ Pubblicata</option>
+              <option value="pending">⏳ In Moderazione</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Testo Recensione *</label>
+            <textarea class="form-control" id="r-text" rows="4" placeholder="Scrivi il testo della recensione…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeReviewModal()">Annulla</button>
+        <button class="btn btn-primary" onclick="saveReview()">💾 Salva</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div class="modal-overlay" id="confirm-modal-overlay">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header"><div class="modal-title">⚠️ Conferma Eliminazione</div></div>
+      <div class="modal-body">
+        <p style="font-size:15px;color:var(--text-2);" id="confirm-msg">Sei sicuro di voler eliminare questo elemento? L'azione è irreversibile.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeConfirm()">Annulla</button>
+        <button class="btn btn-danger" id="confirm-ok-btn">🗑️ Elimina</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+    // ============================================================
+    // AUTH GUARD
+    // ============================================================
+    if (sessionStorage.getItem('mt_logged') !== 'true') {
+      window.location.href = 'admin.html';
+    }
+    document.getElementById('sidebar-username').textContent =
+      localStorage.getItem('mt_admin_user') || 'Admin';
+
+    function logout() {
+      sessionStorage.removeItem('mt_logged');
+      window.location.href = 'admin.html';
+    }
+
+    // ============================================================
+    // DATA STORE (localStorage)
+    // ============================================================
+    const DB = {
+      get: (k, def) => { try { return JSON.parse(localStorage.getItem('mt_'+k)) || def; } catch { return def; } },
+      set: (k, v) => localStorage.setItem('mt_'+k, JSON.stringify(v)),
+    };
+
+    // SEED DATA
+    function seedData() {
+      if (!DB.get('seeded', false)) {
+        DB.set('tours', [
+          { id: 1, name: 'Roma Imperiale: Colosseo, Foro Romano & Palatino', dest: 'Roma, Lazio', cat: 'cultura', duration: '3 ore', price: 49, pax: 12, langs: 'IT, EN, DE', desc: "Immergiti nella storia millenaria di Roma con la nostra guida esperta.", includes: "✓ Guida certificata bilingue\n✓ Biglietti skip-the-line\n✓ Auricolari wireless\n✗ Trasporto\n✗ Pranzo\n✓ Cancellazione gratuita 24h", img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=70', badge: '🔥 Top Seller', status: 'active', bokun: '' },
+          { id: 2, name: 'Chianti Experience: Degustazione Vini e Olio', dest: 'Chianti, Toscana', cat: 'food', duration: '6 ore', price: 89, pax: 8, langs: 'IT, EN', desc: "Un\'immersione nel cuore del Chianti Classico.", includes: "✓ Trasferimento da Firenze\n✓ Degustazione 5 vini DOCG\n✓ Antipasto toscano\n✓ Guida specializzata\n✓ Bottiglia omaggio\n✗ Pranzo completo", img: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=400&q=70', badge: '⭐ Premium', status: 'active', bokun: '' },
+          { id: 3, name: 'Venezia Segreta: Gondola Privata & Cicchetti', dest: 'Venezia, Veneto', cat: 'cultura', duration: '4 ore', price: 75, pax: 6, langs: 'IT, EN, FR', desc: "Scopri la Venezia che i turisti non vedono.", includes: "✓ Gondola privata 30 min\n✓ 5 cicchetti ai bacari\n✓ 2 calici di vino\n✓ Guida locale\n✓ Mappa segreta\n✗ Cena", img: 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=400&q=70', badge: '🆕 Novità', status: 'active', bokun: '' },
+          { id: 4, name: 'Amalfi Coast by Boat: Positano, Ravello & Limoncello', dest: 'Costiera Amalfitana', cat: 'natura', duration: '8 ore', price: 120, pax: 10, langs: 'IT, EN, DE', desc: "La Costiera Amalfitana vista dal mare.", includes: "✓ Barca privata con skipper\n✓ Pranzo a bordo\n✓ Degustazione Limoncello\n✓ Sosta nuoto\n✓ Visita Positano\n✗ Trasferimento hotel", img: 'https://images.unsplash.com/photo-1500916434205-0c77489c6cf7?w=400&q=70', badge: '⭐ Premium', status: 'active', bokun: '' },
+          { id: 5, name: 'Uffizi & Accademia: David di Michelangelo', dest: 'Firenze, Toscana', cat: 'arte', duration: '3.5 ore', price: 65, pax: 8, langs: 'IT, EN, JP', desc: "Ammira il David senza fila.", includes: "✓ Biglietti skip-the-line Uffizi\n✓ Biglietti Accademia\n✓ Guida d\'arte\n✓ Auricolari\n✗ Trasporto\n✗ Pranzo", img: 'https://images.unsplash.com/photo-1541370976299-4d24ebbc9077?w=400&q=70', badge: '🔥 Sold Out spesso', status: 'active', bokun: '' },
+          { id: 6, name: 'Grand Tour Italia Privato: Itinerario Personalizzato', dest: 'Tutta Italia', cat: 'privato', duration: 'Su misura', price: 240, pax: 999, langs: 'Tutte', desc: "Il tuo itinerario, la tua guida.", includes: "✓ Guida privata dedicata\n✓ Itinerario personalizzato\n✓ Auto/minivan privato\n✓ Supporto H24\n✓ Prenotazioni ristoranti\n✗ Pasti inclusi", img: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&q=70', badge: '🔑 Esclusivo', status: 'active', bokun: '' },
+        ]);
+        DB.set('bookings', [
+          { id: 1001, name: 'Sarah Mitchell', email: 'sarah@email.com', phone: '+44 7700 900000', nationality: '🇬🇧 Inglese', tourId: 1, tourName: 'Roma Imperiale', date: '2024-11-15', time: '09:30', adults: 2, children: 0, total: 98, status: 'confirmed', notes: '', created: '2024-10-10' },
+          { id: 1002, name: 'Hans Müller', email: 'hans@email.de', phone: '+49 170 0000000', nationality: '🇩🇪 Tedesco', tourId: 2, tourName: 'Chianti Experience', date: '2024-11-18', time: '10:00', adults: 4, children: 1, total: 414, status: 'pending', notes: 'Allergia frumento', created: '2024-10-12' },
+          { id: 1003, name: 'Claire Dupont', email: 'claire@email.fr', phone: '+33 6 00 00 00 00', nationality: '🇫🇷 Francese', tourId: 3, tourName: 'Venezia Segreta', date: '2024-11-20', time: '15:00', adults: 2, children: 0, total: 150, status: 'confirmed', notes: 'Anniversario di matrimonio', created: '2024-10-13' },
+          { id: 1004, name: 'Yamamoto Kenji', email: 'yamamoto@jp.com', phone: '+81 90 0000 0000', nationality: '🇯🇵 Giapponese', tourId: 5, tourName: 'Uffizi & Accademia', date: '2024-11-22', time: '09:00', adults: 3, children: 0, total: 195, status: 'pending', notes: '', created: '2024-10-14' },
+          { id: 1005, name: 'Robert Davis', email: 'robert@usa.com', phone: '+1 555 000 0000', nationality: '🇺🇸 Americano', tourId: 4, tourName: 'Amalfi Coast by Boat', date: '2024-11-25', time: '08:00', adults: 2, children: 2, total: 408, status: 'pending', notes: 'Bambini 8 e 10 anni', created: '2024-10-15' },
+        ]);
+        DB.set('destinations', [
+          { id: 1, name: 'Roma', img: 'https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?w=400&q=70', count: 18, emoji: '🏛️' },
+          { id: 2, name: 'Venezia', img: 'https://images.unsplash.com/photo-1514890547357-a9ee288728e0?w=400&q=70', count: 8, emoji: '🚣' },
+          { id: 3, name: 'Firenze', img: 'https://images.unsplash.com/photo-1543429258-b78499b43b55?w=400&q=70', count: 10, emoji: '🎨' },
+          { id: 4, name: 'Toscana', img: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=400&q=70', count: 12, emoji: '🍷' },
+          { id: 5, name: 'Costiera Amalfitana', img: 'https://images.unsplash.com/photo-1567958574708-4f7bd6e4d576?w=400&q=70', count: 6, emoji: '⛵' },
+        ]);
+        DB.set('reviews', [
+          { id: 1, name: 'Sarah M.', origin: '🇬🇧 Londra, UK', platform: 'GetYourGuide', rating: 5, avatar: '👩‍🦰', text: 'Un\'esperienza indimenticabile! La guida ci ha portato in posti segreti di Roma che non avremmo mai trovato da soli.', status: 'published' },
+          { id: 2, name: 'Hans K.', origin: '🇩🇪 Monaco, Germania', platform: 'Viator', rating: 5, avatar: '👨', text: 'Il tour del Chianti è stato il punto culminante del nostro viaggio. I vini, il cibo, il paesaggio — perfetto.', status: 'published' },
+          { id: 3, name: 'Claire D.', origin: '🇫🇷 Parigi, Francia', platform: 'TripAdvisor', rating: 5, avatar: '👩', text: 'Abbiamo fatto il tour privato per il nostro anniversario. Ogni dettaglio era curato alla perfezione. Torneremo!', status: 'published' },
+        ]);
+        DB.set('settings', {
+          company: 'Morandi Tour', slogan: 'Incoming Italy',
+          email: 'info@moranditour.it', phone: '+39 000 000 0000', address: '', piva: '',
+          lang: 'it', bokun_id: '', bokun_script: '', gyg_id: '', viator: '', stripe: '',
+          instagram: '', facebook: '', whatsapp: '', youtube: '', maps: '',
+          color_primary: '#d4a840', color_dark: '#1a1208', logo_emoji: '🌿', font: 'Playfair Display',
+          meta_title: 'Morandi Tour — Esperienze d\'Italia su Misura',
+          meta_desc: 'Scopri l\'Italia autentica con Morandi Tour.',
+          toggle_bokun: true, toggle_form: true, toggle_maintenance: false,
+        });
+        DB.set('seeded', true);
+      }
+    }
+    seedData();
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+    let currentSection = 'dashboard';
+    const sectionMeta = {
+      dashboard:    { title: 'Dashboard', sub: 'Panoramica del tuo sito', cta: null },
+      tours:        { title: '🗺️ Tour & Esperienze', sub: 'Gestisci i tuoi tour', cta: '➕ Nuovo Tour' },
+      bookings:     { title: '📅 Prenotazioni', sub: 'Gestisci le prenotazioni', cta: '➕ Nuova Prenotazione' },
+      destinations: { title: '📍 Destinazioni', sub: 'Le destinazioni del sito', cta: '➕ Nuova Destinazione' },
+      reviews:      { title: '⭐ Recensioni', sub: 'Gestisci le recensioni', cta: '➕ Nuova Recensione' },
+      settings:     { title: '⚙️ Impostazioni', sub: 'Configurazione sito', cta: '💾 Salva' },
+    };
+
+    function showSection(name) {
+      document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('section-' + name).classList.add('active');
+      document.getElementById('nav-' + name).classList.add('active');
+      currentSection = name;
+      const m = sectionMeta[name];
+      document.getElementById('topbar-title').textContent = m.title;
+      document.getElementById('topbar-subtitle').textContent = m.sub;
+      const ctaBtn = document.getElementById('topbar-cta');
+      if (m.cta) { ctaBtn.style.display = 'flex'; ctaBtn.textContent = m.cta; }
+      else { ctaBtn.style.display = 'none'; }
+      // Lazy render
+      if (name === 'tours') renderToursTable();
+      if (name === 'bookings') renderBookingsTable();
+      if (name === 'destinations') renderDestinations();
+      if (name === 'reviews') renderReviews();
+      if (name === 'settings') loadSettings();
+      if (name === 'dashboard') renderDashboard();
+      // Mobile: close sidebar
+      document.getElementById('sidebar').classList.remove('mobile-open');
+    }
+
+    function topbarAction() {
+      const actions = { tours: openTourModal, bookings: openBookingModal, destinations: openDestModal, reviews: openReviewModal, settings: saveSettings };
+      if (actions[currentSection]) actions[currentSection]();
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('mobile-open');
+    }
+
+    // ============================================================
+    // DASHBOARD
+    // ============================================================
+    function renderDashboard() {
+      const tours = DB.get('tours', []);
+      const bookings = DB.get('bookings', []);
+      // Stats
+      const revenue = bookings.filter(b => b.status === 'confirmed').reduce((s, b) => s + (b.total || 0), 0);
+      document.getElementById('stat-revenue').textContent = '€' + revenue.toLocaleString('it-IT');
+      document.getElementById('stat-bookings').textContent = bookings.length;
+      document.getElementById('stat-tours').textContent = tours.filter(t => t.status === 'active').length;
+      // Badges
+      document.getElementById('tours-count-badge').textContent = tours.length;
+      const pending = bookings.filter(b => b.status === 'pending').length;
+      document.getElementById('bookings-count-badge').textContent = pending;
+      document.getElementById('reviews-count-badge').textContent = DB.get('reviews', []).length;
+      document.getElementById('notif-dot').style.display = pending > 0 ? 'block' : 'none';
+      // Chart
+      const days = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+      const chartData = [3,5,2,8,6,11,7];
+      const maxVal = Math.max(...chartData);
+      let chartHtml = '', labelsHtml = '';
+      chartData.forEach((v, i) => {
+        const pct = Math.round((v / maxVal) * 100);
+        chartHtml += `<div class="chart-bar" style="height:${pct}%" data-val="${v} prenotazioni"></div>`;
+        labelsHtml += `<div class="chart-label">${days[i]}</div>`;
+      });
+      document.getElementById('bookings-chart').innerHTML = chartHtml;
+      document.getElementById('chart-labels').innerHTML = labelsHtml;
+      // Activity
+      const activities = [
+        { type:'booking', icon:'📅', text:'<strong>Nuova prenotazione</strong><span>Robert Davis — Amalfi Coast by Boat</span>', time:'5 min fa' },
+        { type:'review', icon:'⭐', text:'<strong>Nuova recensione 5★</strong><span>Yamamoto Kenji — Firenze</span>', time:'1 ora fa' },
+        { type:'booking', icon:'✅', text:'<strong>Prenotazione confermata</strong><span>Claire Dupont — Venezia Segreta</span>', time:'2 ore fa' },
+        { type:'tour', icon:'🗺️', text:'<strong>Tour aggiornato</strong><span>Chianti Experience — prezzo modificato</span>', time:'Ieri' },
+        { type:'alert', icon:'⚠️', text:'<strong>Disponibilità esaurita</strong><span>Roma Imperiale — 18 Nov</span>', time:'Ieri' },
+      ];
+      document.getElementById('activity-feed').innerHTML = activities.map(a =>
+        `<div class="activity-item">
+          <div class="activity-dot ${a.type}">${a.icon}</div>
+          <div class="activity-text">${a.text}</div>
+          <div style="font-size:11px;color:var(--text-3);white-space:nowrap;margin-left:auto;">${a.time}</div>
+        </div>`
+      ).join('');
+      // Recent bookings table
+      const recent = [...bookings].reverse().slice(0, 5);
+      document.getElementById('dash-bookings-body').innerHTML = recent.map(b =>
+        `<tr>
+          <td><span style="font-weight:700;color:var(--text-3);">#${b.id}</span></td>
+          <td><strong>${b.name}</strong><br><span class="text-xs text-muted">${b.nationality||''}</span></td>
+          <td>${b.tourName}</td>
+          <td>${b.date}</td>
+          <td>${b.adults + b.children} pax</td>
+          <td><strong>€${b.total}</strong></td>
+          <td>${statusBadge(b.status)}</td>
+          <td class="actions">
+            <button class="tbl-btn view" onclick="showSection('bookings')">Vedi</button>
+          </td>
+        </tr>`
+      ).join('') || '<tr><td colspan="8" class="text-center text-muted" style="padding:30px;">Nessuna prenotazione</td></tr>';
+      // Top tours
+      document.getElementById('top-tours-list').innerHTML = tours.slice(0, 5).map((t, i) => `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--gold-dark);">${i+1}</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;">${t.name.split(':')[0]}</div>
+            <div class="progress-bar mt-1"><div class="progress-fill" style="width:${90-i*12}%"></div></div>
+          </div>
+          <div style="font-weight:700;color:var(--gold-dark);">€${t.price}</div>
+        </div>`).join('');
+      // Origins
+      const origins = [
+        { flag:'🇬🇧', name:'Regno Unito', pct: 28 }, { flag:'🇩🇪', name:'Germania', pct: 22 },
+        { flag:'🇺🇸', name:'USA', pct: 18 }, { flag:'🇫🇷', name:'Francia', pct: 15 },
+        { flag:'🇯🇵', name:'Giappone', pct: 10 }, { flag:'🌍', name:'Altri', pct: 7 },
+      ];
+      document.getElementById('origin-list').innerHTML = origins.map(o => `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span style="font-size:20px;">${o.flag}</span>
+          <div style="flex:1;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>${o.name}</span><span style="font-weight:700;">${o.pct}%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${o.pct}%;opacity:0.7"></div></div>
+          </div>
+        </div>`).join('');
+    }
+
+    function statusBadge(s) {
+      const map = { confirmed:'<span class="badge green">✅ Confermato</span>', pending:'<span class="badge orange">⏳ In Attesa</span>', cancelled:'<span class="badge red">❌ Annullato</span>', active:'<span class="badge green">✅ Attivo</span>', draft:'<span class="badge gray">📝 Bozza</span>', hidden:'<span class="badge red">🚫 Nascosto</span>', published:'<span class="badge green">✅ Pubblicata</span>' };
+      return map[s] || `<span class="badge gray">${s}</span>`;
+    }
+
+    // ============================================================
+    // TOURS
+    // ============================================================
+    let toursFilter = 'tutti';
+    function filterTours(btn, cat) {
+      document.querySelectorAll('#section-tours .filter-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active'); toursFilter = cat; renderToursTable();
+    }
+
+    function renderToursTable() {
+      let tours = DB.get('tours', []);
+      const q = document.getElementById('tours-search')?.value.toLowerCase() || '';
+      if (toursFilter !== 'tutti') tours = tours.filter(t => t.cat === toursFilter);
+      if (q) tours = tours.filter(t => t.name.toLowerCase().includes(q) || t.dest.toLowerCase().includes(q));
+      document.getElementById('tours-body').innerHTML = tours.map(t => `
+        <tr>
+          <td>${t.img ? `<img class="tour-thumb" src="${t.img}" alt="${t.name}" onerror="this.style.display='none'">` : `<div class="tour-thumb-ph">🗺️</div>`}</td>
+          <td><strong style="font-size:14px;">${t.name}</strong>${t.badge ? `<br><span class="badge gold" style="margin-top:4px;">${t.badge}</span>` : ''}</td>
+          <td>📍 ${t.dest}</td>
+          <td>${catLabel(t.cat)}</td>
+          <td>⏱️ ${t.duration}</td>
+          <td><strong>€${t.price}</strong><span class="text-muted text-xs">/pers.</span></td>
+          <td>👥 ${t.pax === 999 ? 'Privato' : t.pax}</td>
+          <td>${statusBadge(t.status)}</td>
+          <td class="actions">
+            <button class="tbl-btn edit" onclick="editTour(${t.id})">✏️ Modifica</button>
+            <button class="tbl-btn delete" onclick="confirmDelete('tour',${t.id})">🗑️</button>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🗺️</div><p>Nessun tour trovato</p></div></td></tr>';
+    }
+
+    function catLabel(c) {
+      const m = { cultura:'🏛️ Cultura', food:'🍷 Food & Wine', natura:'🏔️ Natura', arte:'🎨 Arte', privato:'🔑 Privato' };
+      return m[c] || c;
+    }
+
+    let editingTourId = null;
+    function openTourModal(id) { editingTourId = null; resetTourForm(); document.getElementById('tour-modal-title').textContent = '➕ Nuovo Tour'; openModal('tour-modal-overlay'); }
+    function editTour(id) {
+      const tours = DB.get('tours', []);
+      const t = tours.find(x => x.id === id); if (!t) return;
+      editingTourId = id;
+      document.getElementById('tour-modal-title').textContent = '✏️ Modifica Tour';
+      document.getElementById('t-name').value = t.name;
+      document.getElementById('t-dest').value = t.dest;
+      document.getElementById('t-cat').value = t.cat;
+      document.getElementById('t-duration').value = t.duration;
+      document.getElementById('t-price').value = t.price;
+      document.getElementById('t-pax').value = t.pax === 999 ? '' : t.pax;
+      document.getElementById('t-langs').value = t.langs;
+      document.getElementById('t-desc').value = t.desc;
+      document.getElementById('t-includes').value = t.includes;
+      document.getElementById('t-img').value = t.img;
+      document.getElementById('t-badge').value = t.badge || '';
+      document.getElementById('t-bokun').value = t.bokun || '';
+      document.getElementById('t-status').value = t.status;
+      openModal('tour-modal-overlay');
+    }
+    function resetTourForm() {
+      ['t-name','t-dest','t-duration','t-price','t-pax','t-langs','t-desc','t-includes','t-img','t-badge','t-bokun'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      document.getElementById('t-cat').value = 'cultura';
+      document.getElementById('t-status').value = 'active';
+    }
+    function closeTourModal() { closeModal('tour-modal-overlay'); }
+    function saveTour() {
+      const name = document.getElementById('t-name').value.trim();
+      const price = parseFloat(document.getElementById('t-price').value);
+      if (!name) { showToast('⚠️ Inserisci il nome del tour'); return; }
+      if (!price) { showToast('⚠️ Inserisci il prezzo'); return; }
+      let tours = DB.get('tours', []);
+      const tour = {
+        id: editingTourId || Date.now(),
+        name, dest: document.getElementById('t-dest').value,
+        cat: document.getElementById('t-cat').value,
+        duration: document.getElementById('t-duration').value,
+        price, pax: parseInt(document.getElementById('t-pax').value) || 999,
+        langs: document.getElementById('t-langs').value,
+        desc: document.getElementById('t-desc').value,
+        includes: document.getElementById('t-includes').value,
+        img: document.getElementById('t-img').value,
+        badge: document.getElementById('t-badge').value,
+        bokun: document.getElementById('t-bokun').value,
+        status: document.getElementById('t-status').value,
+      };
+      if (editingTourId) tours = tours.map(t => t.id === editingTourId ? tour : t);
+      else tours.push(tour);
+      DB.set('tours', tours);
+      closeTourModal();
+      renderToursTable();
+      renderDashboard();
+      showToast(editingTourId ? '✅ Tour aggiornato!' : '✅ Tour creato!');
+      syncPublicSite();
+    }
+
+    // ============================================================
+    // BOOKINGS
+    // ============================================================
+    let bookingsFilter = 'tutti';
+    function filterBookings(btn, s) {
+      document.querySelectorAll('#section-bookings .filter-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active'); bookingsFilter = s; renderBookingsTable();
+    }
+
+    function renderBookingsTable() {
+      let bookings = DB.get('bookings', []);
+      const q = document.getElementById('bookings-search')?.value.toLowerCase() || '';
+      if (bookingsFilter !== 'tutti') bookings = bookings.filter(b => b.status === bookingsFilter);
+      if (q) bookings = bookings.filter(b => b.name.toLowerCase().includes(q) || b.tourName.toLowerCase().includes(q) || b.email.toLowerCase().includes(q));
+      document.getElementById('bookings-body').innerHTML = [...bookings].reverse().map(b => `
+        <tr>
+          <td><strong style="color:var(--text-3);">#${b.id}</strong></td>
+          <td><strong>${b.name}</strong><br><span class="text-xs text-muted">${b.nationality||''}</span></td>
+          <td class="text-sm">${b.email}</td>
+          <td>${b.tourName}</td>
+          <td>${b.date} ${b.time ? '@ '+b.time : ''}</td>
+          <td>${b.adults}A + ${b.children}B</td>
+          <td><strong>€${b.total}</strong></td>
+          <td>${statusBadge(b.status)}</td>
+          <td class="actions">
+            ${b.status==='pending' ? `<button class="tbl-btn edit" onclick="changeBookingStatus(${b.id},'confirmed')">✅</button><button class="tbl-btn delete" onclick="changeBookingStatus(${b.id},'cancelled')">❌</button>` : ''}
+            <button class="tbl-btn view" onclick="editBooking(${b.id})">✏️</button>
+            <button class="tbl-btn delete" onclick="confirmDelete('booking',${b.id})">🗑️</button>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📅</div><p>Nessuna prenotazione</p></div></td></tr>';
+    }
+
+    function changeBookingStatus(id, status) {
+      let bookings = DB.get('bookings', []);
+      bookings = bookings.map(b => b.id === id ? { ...b, status } : b);
+      DB.set('bookings', bookings);
+      renderBookingsTable(); renderDashboard();
+      showToast(status === 'confirmed' ? '✅ Prenotazione confermata!' : '❌ Prenotazione annullata');
+    }
+
+    let editingBookingId = null;
+    function openBookingModal() {
+      editingBookingId = null;
+      ['b-name','b-email','b-phone','b-nationality','b-notes'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('b-adults').value = 2;
+      document.getElementById('b-children').value = 0;
+      document.getElementById('b-total').value = '';
+      document.getElementById('b-status').value = 'pending';
+      document.getElementById('b-time').value = '09:00';
+      // Populate tours select
+      const tours = DB.get('tours', []);
+      document.getElementById('b-tour').innerHTML = '<option value="">— Seleziona tour —</option>' +
+        tours.map(t => `<option value="${t.id}" data-price="${t.price}">${t.name} (€${t.price})</option>`).join('');
+      document.getElementById('booking-modal-title').textContent = '➕ Nuova Prenotazione';
+      openModal('booking-modal-overlay');
+    }
+    function editBooking(id) {
+      const b = DB.get('bookings', []).find(x => x.id === id); if (!b) return;
+      editingBookingId = id;
+      openBookingModal();
+      setTimeout(() => {
+        document.getElementById('b-name').value = b.name;
+        document.getElementById('b-email').value = b.email;
+        document.getElementById('b-phone').value = b.phone || '';
+        document.getElementById('b-nationality').value = b.nationality || '';
+        document.getElementById('b-adults').value = b.adults;
+        document.getElementById('b-children').value = b.children;
+        document.getElementById('b-total').value = b.total;
+        document.getElementById('b-date').value = b.date;
+        document.getElementById('b-time').value = b.time || '09:00';
+        document.getElementById('b-status').value = b.status;
+        document.getElementById('b-notes').value = b.notes || '';
+        const sel = document.getElementById('b-tour');
+        for (let i = 0; i < sel.options.length; i++) if (parseInt(sel.options[i].value) === b.tourId) sel.selectedIndex = i;
+        document.getElementById('booking-modal-title').textContent = '✏️ Modifica Prenotazione';
+      }, 50);
+    }
+    function closeBookingModal() { closeModal('booking-modal-overlay'); }
+    function calcBookingTotal() {
+      const sel = document.getElementById('b-tour');
+      const opt = sel.options[sel.selectedIndex];
+      const price = opt ? parseFloat(opt.dataset.price) || 0 : 0;
+      const adults = parseInt(document.getElementById('b-adults').value) || 0;
+      const children = parseInt(document.getElementById('b-children').value) || 0;
+      const total = (adults * price) + (children * price * 0.7);
+      document.getElementById('b-total').value = total.toFixed(2);
+    }
+    function saveBooking() {
+      const name = document.getElementById('b-name').value.trim();
+      const email = document.getElementById('b-email').value.trim();
+      const tourSel = document.getElementById('b-tour');
+      const date = document.getElementById('b-date').value;
+      if (!name || !email || !tourSel.value || !date) { showToast('⚠️ Compila i campi obbligatori'); return; }
+      const tourOpt = tourSel.options[tourSel.selectedIndex];
+      let bookings = DB.get('bookings', []);
+      const bk = {
+        id: editingBookingId || Date.now(),
+        name, email,
+        phone: document.getElementById('b-phone').value,
+        nationality: document.getElementById('b-nationality').value,
+        tourId: parseInt(tourSel.value),
+        tourName: tourOpt.text.split('(')[0].trim(),
+        date, time: document.getElementById('b-time').value,
+        adults: parseInt(document.getElementById('b-adults').value)||1,
+        children: parseInt(document.getElementById('b-children').value)||0,
+        total: parseFloat(document.getElementById('b-total').value)||0,
+        status: document.getElementById('b-status').value,
+        notes: document.getElementById('b-notes').value,
+        created: new Date().toISOString().split('T')[0],
+      };
+      if (editingBookingId) bookings = bookings.map(b => b.id === editingBookingId ? bk : b);
+      else bookings.push(bk);
+      DB.set('bookings', bookings);
+      closeBookingModal(); renderBookingsTable(); renderDashboard();
+      showToast('✅ Prenotazione salvata!');
+    }
+
+    // ============================================================
+    // DESTINATIONS
+    // ============================================================
+    let editingDestId = null;
+    function renderDestinations() {
+      const dests = DB.get('destinations', []);
+      document.getElementById('destinations-grid').innerHTML = dests.map(d => `
+        <div class="panel" style="overflow:hidden;">
+          <img src="${d.img}" style="width:100%;height:160px;object-fit:cover;" alt="${d.name}" onerror="this.style.display='none'" />
+          <div class="panel-body">
+            <div style="font-size:28px;margin-bottom:8px;">${d.emoji||'📍'}</div>
+            <div style="font-size:18px;font-weight:700;">${d.name}</div>
+            <div class="text-muted text-sm mt-1">${d.count} esperienze disponibili</div>
+            <div style="display:flex;gap:8px;margin-top:14px;">
+              <button class="btn btn-secondary btn-sm" onclick="editDest(${d.id})">✏️ Modifica</button>
+              <button class="btn btn-danger btn-sm" onclick="confirmDelete('dest',${d.id})">🗑️</button>
+            </div>
+          </div>
+        </div>`).join('') + `
+        <div class="panel" style="border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;min-height:280px;cursor:pointer;" onclick="openDestModal()">
+          <div class="text-center">
+            <div style="font-size:40px;margin-bottom:8px;">➕</div>
+            <p style="color:var(--text-3);">Aggiungi Destinazione</p>
+          </div>
+        </div>`;
+    }
+
+    function openDestModal() { editingDestId = null; ['d-name','d-img','d-count','d-emoji'].forEach(id => document.getElementById(id).value = ''); document.getElementById('dest-modal-title').textContent = '➕ Nuova Destinazione'; openModal('dest-modal-overlay'); }
+    function editDest(id) {
+      const d = DB.get('destinations', []).find(x => x.id === id); if (!d) return;
+      editingDestId = id;
+      document.getElementById('d-name').value = d.name;
+      document.getElementById('d-img').value = d.img;
+      document.getElementById('d-count').value = d.count;
+      document.getElementById('d-emoji').value = d.emoji || '';
+      document.getElementById('dest-modal-title').textContent = '✏️ Modifica Destinazione';
+      openModal('dest-modal-overlay');
+    }
+    function closeDestModal() { closeModal('dest-modal-overlay'); }
+    function saveDest() {
+      const name = document.getElementById('d-name').value.trim();
+      if (!name) { showToast('⚠️ Inserisci il nome'); return; }
+      let dests = DB.get('destinations', []);
+      const d = { id: editingDestId || Date.now(), name, img: document.getElementById('d-img').value, count: parseInt(document.getElementById('d-count').value)||0, emoji: document.getElementById('d-emoji').value };
+      if (editingDestId) dests = dests.map(x => x.id === editingDestId ? d : x);
+      else dests.push(d);
+      DB.set('destinations', dests);
+      closeDestModal(); renderDestinations();
+      showToast('✅ Destinazione salvata!');
+      syncPublicSite();
+    }
+
+    // ============================================================
+    // REVIEWS
+    // ============================================================
+    let reviewsFilter = 'tutti';
+    function filterReviews(btn, s) {
+      document.querySelectorAll('#section-reviews .filter-chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active'); reviewsFilter = s; renderReviews();
+    }
+    function renderReviews() {
+      let reviews = DB.get('reviews', []);
+      if (reviewsFilter !== 'tutti') reviews = reviews.filter(r => r.status === reviewsFilter);
+      document.getElementById('reviews-grid').innerHTML = reviews.map(r => `
+        <div class="panel panel-body" style="position:relative;">
+          ${r.status === 'pending' ? '<div style="position:absolute;top:14px;right:14px;"><span class="badge orange">⏳ In Moderazione</span></div>' : '<div style="position:absolute;top:14px;right:14px;"><span class="badge green">✅ Pubblicata</span></div>'}
+          <div style="color:var(--gold);font-size:16px;margin-bottom:10px;">${'★'.repeat(r.rating)}</div>
+          <p style="font-size:14px;color:var(--text-2);line-height:1.6;margin-bottom:16px;">"${r.text}"</p>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:18px;">${r.avatar||'👤'}</div>
+            <div>
+              <div style="font-weight:600;font-size:13px;">${r.name}</div>
+              <div class="text-xs text-muted">${r.origin} · ${r.platform}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="editReview(${r.id})">✏️ Modifica</button>
+            ${r.status==='pending' ? `<button class="btn btn-sm" style="background:var(--green-bg);color:var(--green);border:1px solid rgba(46,125,50,0.2);" onclick="publishReview(${r.id})">✅ Pubblica</button>` : ''}
+            <button class="btn btn-danger btn-sm" onclick="confirmDelete('review',${r.id})">🗑️</button>
+          </div>
+        </div>`).join('') || '<div class="empty-state"><div class="empty-icon">⭐</div><p>Nessuna recensione</p></div>';
+    }
+
+    let editingReviewId = null;
+    function openReviewModal() { editingReviewId = null; ['r-name','r-origin','r-text'].forEach(id => document.getElementById(id).value = ''); document.getElementById('r-avatar').value = '👤'; document.getElementById('r-rating').value = 5; document.getElementById('r-status').value = 'published'; document.getElementById('review-modal-title').textContent = '➕ Nuova Recensione'; openModal('review-modal-overlay'); }
+    function editReview(id) {
+      const r = DB.get('reviews', []).find(x => x.id === id); if (!r) return;
+      editingReviewId = id;
+      document.getElementById('r-name').value = r.name;
+      document.getElementById('r-origin').value = r.origin;
+      document.getElementById('r-platform').value = r.platform;
+      document.getElementById('r-rating').value = r.rating;
+      document.getElementById('r-avatar').value = r.avatar || '👤';
+      document.getElementById('r-text').value = r.text;
+      document.getElementById('r-status').value = r.status;
+      document.getElementById('review-modal-title').textContent = '✏️ Modifica Recensione';
+      openModal('review-modal-overlay');
+    }
+    function closeReviewModal() { closeModal('review-modal-overlay'); }
+    function publishReview(id) { let reviews = DB.get('reviews',[]); DB.set('reviews', reviews.map(r => r.id===id ? {...r,status:'published'} : r)); renderReviews(); showToast('✅ Recensione pubblicata!'); }
+    function saveReview() {
+      const name = document.getElementById('r-name').value.trim();
+      const text = document.getElementById('r-text').value.trim();
+      if (!name || !text) { showToast('⚠️ Compila nome e testo'); return; }
+      let reviews = DB.get('reviews', []);
+      const r = { id: editingReviewId || Date.now(), name, origin: document.getElementById('r-origin').value, platform: document.getElementById('r-platform').value, rating: parseInt(document.getElementById('r-rating').value), avatar: document.getElementById('r-avatar').value, text, status: document.getElementById('r-status').value };
+      if (editingReviewId) reviews = reviews.map(x => x.id === editingReviewId ? r : x);
+      else reviews.push(r);
+      DB.set('reviews', reviews);
+      closeReviewModal(); renderReviews();
+      showToast('✅ Recensione salvata!');
+      syncPublicSite();
+    }
+
+    // ============================================================
+    // SETTINGS
+    // ============================================================
+    function loadSettings() {
+      const s = DB.get('settings', {});
+      const fields = { 's-company':'company','s-slogan':'slogan','s-email':'email','s-phone':'phone','s-address':'address','s-piva':'piva','s-bokun-id':'bokun_id','s-bokun-script':'bokun_script','s-gyg-id':'gyg_id','s-viator':'viator','s-stripe':'stripe','s-instagram':'instagram','s-facebook':'facebook','s-whatsapp':'whatsapp','s-youtube':'youtube','s-maps':'maps','s-color-primary-hex':'color_primary','s-color-dark-hex':'color_dark','s-logo-emoji':'logo_emoji','s-meta-title':'meta_title','s-meta-desc':'meta_desc' };
+      Object.entries(fields).forEach(([id, key]) => { const el = document.getElementById(id); if (el && s[key] !== undefined) el.value = s[key]; });
+      const cp = document.getElementById('s-color-primary'); if (cp) cp.value = s.color_primary || '#d4a840';
+      const cd = document.getElementById('s-color-dark'); if (cd) cd.value = s.color_dark || '#1a1208';
+      const sf = document.getElementById('s-font'); if (sf) sf.value = s.font || 'Playfair Display';
+      const sl = document.getElementById('s-lang'); if (sl) sl.value = s.lang || 'it';
+      document.getElementById('s-admin-user').value = localStorage.getItem('mt_admin_user') || 'admin';
+      const tb = document.getElementById('toggle-bokun'); if (tb) tb.className = 'toggle ' + (s.toggle_bokun !== false ? 'on' : '');
+      const tf = document.getElementById('toggle-booking-form'); if (tf) tf.className = 'toggle ' + (s.toggle_form !== false ? 'on' : '');
+      const tm = document.getElementById('toggle-maintenance'); if (tm) tm.className = 'toggle ' + (s.toggle_maintenance ? 'on' : '');
+    }
+
+    function saveSettings() {
+      const s = DB.get('settings', {});
+      const fields = { 's-company':'company','s-slogan':'slogan','s-email':'email','s-phone':'phone','s-address':'address','s-piva':'piva','s-bokun-id':'bokun_id','s-bokun-script':'bokun_script','s-gyg-id':'gyg_id','s-viator':'viator','s-stripe':'stripe','s-instagram':'instagram','s-facebook':'facebook','s-whatsapp':'whatsapp','s-youtube':'youtube','s-maps':'maps','s-color-primary-hex':'color_primary','s-color-dark-hex':'color_dark','s-logo-emoji':'logo_emoji','s-meta-title':'meta_title','s-meta-desc':'meta_desc' };
+      Object.entries(fields).forEach(([id, key]) => { const el = document.getElementById(id); if (el) s[key] = el.value; });
+      s.font = document.getElementById('s-font')?.value;
+      s.lang = document.getElementById('s-lang')?.value;
+      s.toggle_bokun = document.getElementById('toggle-bokun')?.classList.contains('on');
+      s.toggle_form = document.getElementById('toggle-booking-form')?.classList.contains('on');
+      s.toggle_maintenance = document.getElementById('toggle-maintenance')?.classList.contains('on');
+      // Password change
+      const newUser = document.getElementById('s-admin-user').value.trim();
+      const newPass = document.getElementById('s-admin-pass').value;
+      const newPass2 = document.getElementById('s-admin-pass2').value;
+      if (newUser) localStorage.setItem('mt_admin_user', newUser);
+      if (newPass) {
+        if (newPass !== newPass2) { showToast('⚠️ Le password non coincidono!'); return; }
+        localStorage.setItem('mt_admin_pass', newPass);
+        document.getElementById('s-admin-pass').value = '';
+        document.getElementById('s-admin-pass2').value = '';
+      }
+      DB.set('settings', s);
+      showToast('✅ Impostazioni salvate!');
+      syncPublicSite();
+    }
+
+    function toggleSwitch(el) { el.classList.toggle('on'); }
+
+    // Sync color pickers
+    document.getElementById('s-color-primary')?.addEventListener('input', e => { document.getElementById('s-color-primary-hex').value = e.target.value; });
+    document.getElementById('s-color-dark')?.addEventListener('input', e => { document.getElementById('s-color-dark-hex').value = e.target.value; });
+
+    // ============================================================
+    // DELETE CONFIRM
+    // ============================================================
+    let pendingDelete = null;
+    function confirmDelete(type, id) {
+      pendingDelete = { type, id };
+      document.getElementById('confirm-msg').textContent = `Sei sicuro di voler eliminare questo ${type === 'tour' ? 'tour' : type === 'booking' ? 'prenotazione' : type === 'dest' ? 'destinazione' : 'recensione'}? L\'azione è irreversibile.`;
+      document.getElementById('confirm-ok-btn').onclick = () => { doDelete(type, id); closeConfirm(); };
+      openModal('confirm-modal-overlay');
+    }
+    function doDelete(type, id) {
+      const keyMap = { tour: 'tours', booking: 'bookings', dest: 'destinations', review: 'reviews' };
+      const key = keyMap[type];
+      DB.set(key, DB.get(key, []).filter(x => x.id !== id));
+      const renderMap = { tour: renderToursTable, booking: renderBookingsTable, dest: renderDestinations, review: renderReviews };
+      renderMap[type](); renderDashboard();
+      showToast('🗑️ Eliminato con successo');
+      syncPublicSite();
+    }
+    function closeConfirm() { closeModal('confirm-modal-overlay'); }
+
+    // ============================================================
+    // MODAL HELPERS
+    // ============================================================
+    function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open')); document.body.style.overflow = ''; } });
+    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('open'); document.body.style.overflow = ''; } }));
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(msg, dur = 3000) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(window._tt);
+      window._tt = setTimeout(() => t.classList.remove('show'), dur);
+    }
+
+    // ============================================================
+    // SYNC PUBLIC SITE
+    // ============================================================
+    function syncPublicSite() {
+      // The public site reads directly from localStorage, so it auto-syncs.
+      // This function is a hook for future server sync.
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    renderDashboard();
+  </script>
+</body>
+</html>
